@@ -1,0 +1,10 @@
+{
+	"name" : "zerathun/funclib",
+	"autoload" : {
+		"psr-4" : {
+			"Funclib\\" : "src"
+		}
+	},
+	"description" : "Database Library",
+	"license" : "LGPL-2.0+"
+}

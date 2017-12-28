@@ -1,5 +1,5 @@
 <?php 
-namespace src;
+namespace Funclib;
 
 class FileLog {
 	private $file_res;

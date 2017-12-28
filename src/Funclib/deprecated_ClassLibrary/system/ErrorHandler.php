@@ -1,11 +1,11 @@
 <?php
 
-namespace src;
+namespace zeradun\api_manager\includes\Ember\ClassLibrary\system;
 
 use zeradun\api_manager\includes\Ember\ClassLibrary\system\EList;
 use zeradun\api_manager\includes\Ember\ClassLibrary\system\ErrorItem;
 use zeradun\api_manager\includes\Ember\ClassLibrary\Ifaces\Displayable;
-use src\FileLog;
+use zeradun\api_manager\includes\Ember\ClassLibrary\system\FileLog;
 
 class ErrorHandler extends EList implements Displayable {
 	

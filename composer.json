@@ -5,6 +5,7 @@
 			"Funclib\\" : "src/Funclib"
 		}
 	},
-	"description" : "Database Library",
-	"license" : "LGPL-2.0+"
+	"description" : "Funclib Library",
+	"license" : "LGPL-2.0+",
+	"type" : "library"
 }

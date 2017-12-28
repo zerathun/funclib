@@ -16,7 +16,7 @@ class ComposerStaticInit4bea1af113f2443d297d1b2373481389
     public static $prefixDirsPsr4 = array (
         'Funclib\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/src',
+            0 => __DIR__ . '/../..' . '/src/Funclib',
         ),
     );
 

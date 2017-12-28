@@ -6,5 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Funclib\\' => array($baseDir . '/src'),
+    'Funclib\\' => array($baseDir . '/src/Funclib'),
 );

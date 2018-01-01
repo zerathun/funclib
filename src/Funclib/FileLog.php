@@ -8,7 +8,7 @@ class FileLog {
 	    if(isset(FILELOG_PATH)) {
 	        $this->file_res = fopen(FILELOG_PATH, "w+");
 	    } else {
-	        throw new Exception("Please define Constant 'FILELOG_PATH'");
+	        throw new \Exception("Please define Constant 'FILELOG_PATH'");
 	    }
 	}
 	

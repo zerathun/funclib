@@ -11,10 +11,12 @@ class ErrorItem extends EListItem implements Displayable {
      */
     private $error_no = 0;
     private $error_msg = "";
+    
     public function __construct($msg, $err_no) {
         $this->setErrorMsg ( $msg );
         $this->setErrorNo ( $err_no );
     }
+    
     private function setErrorNo($error_no) {
         $this->error_no = $error_no;
     }
@@ -29,7 +31,8 @@ class ErrorItem extends EListItem implements Displayable {
     public function setErrorMsg($msg) {
         $this->error_msg = $msg;
     }
-    public function isEqual(ListItem $listItem) {
+    
+    public function isEqual(EListItem $listItem) {
         if (! ($listItem instanceof ErrorItem)) {
             throw new \Exception ( "Wrong item given" );
         }

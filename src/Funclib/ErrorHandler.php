@@ -5,6 +5,7 @@ use Funclib\Useables\EList;
 use Funclib\FileLog;
 use Funclib\Useables\ErrorItem;
 use Funclib\Ifaces\Displayable;
+use \Exception as Exception;
 
 
 class ErrorHandler extends EList implements Displayable {
@@ -14,6 +15,7 @@ class ErrorHandler extends EList implements Displayable {
      */
     public function __construct() {
     }
+    
     private static $errorHandler;
     private $display_trace = true;
     
@@ -47,7 +49,7 @@ class ErrorHandler extends EList implements Displayable {
                 if(!empty($this->getCurrent()) && $index == $this->getCurrent()->getErrorNo()) {
                     return $this->getCurrent();
                 }
-            } while($this->getNext() && !$this->isLast());
+            } while($this->getNext());
             return false;
     }
     
@@ -96,6 +98,17 @@ class ErrorHandler extends EList implements Displayable {
         return parent::getList();
     }
     
+    
+    public function __toArray() {
+        $this->resetListIndex();
+        do {
+            if(!empty($this->getCurrent())) {
+                $array[] = $this->getCurrent()->getErrorMsg();
+            }
+        } while($this->getNext());
+        return $array;
+    }
+    
     public function getOutput() {
         $template = new TemplateReader ();
         $template->readFile ( "Templates/ErrorWindow.html" );
@@ -109,8 +122,8 @@ class ErrorHandler extends EList implements Displayable {
                 $it->next ();
             }
             $template->inputVariable ( "ERROR_MESSAGE", $output );
-            $template->finalizeOutput ();
-            return $template->getOutput ();
+        $template->finalizeOutput ();
+        return $template->getOutput ();
     }
     
     public function logError(\Exception $e) {

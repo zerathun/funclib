@@ -4,7 +4,7 @@ namespace Funclib\Useables;
 use FuncLib\Useables\EListItem;
 
 
-class EList extends \ArrayObject {
+class EList extends \ArrayObject implements \Traversable {
     protected $elist;
     protected $iterator;
     
@@ -16,7 +16,7 @@ class EList extends \ArrayObject {
     private $currentIndex;
     
     public function __construct() {
-        $this->iterator = $this->getIterator ();
+        $this->iterator = $this->getIterator();
     }
     
     public function getList() {
@@ -103,6 +103,7 @@ class EList extends \ArrayObject {
             $iterator = $this->getIterator ();
         }
     }
+    
 }
 
 ?>

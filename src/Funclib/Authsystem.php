@@ -1,5 +1,5 @@
 <?php
-namespace EmbIndustry;
+namespace Funclib;
 
 use Database\Database;
 use Funclib\LinkMng;

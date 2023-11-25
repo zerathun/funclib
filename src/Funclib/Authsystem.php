@@ -16,6 +16,7 @@ class Authsystem {
     private $authServer = 'https://auth.embin.ch?auth=login';
     private $isAuthenticated = false;
     private $currentToken;
+    private $sessionName = "random_session_name";
     
     public function __construct() {
         
@@ -29,6 +30,11 @@ class Authsystem {
     public function SetAppId(int $id)
     {
         $this->appid = $id;
+    }
+    
+    public function SetSessionName(string $session_name)
+    {
+        $this->sessionName = $session_name;
     }
     
     /**
@@ -46,12 +52,12 @@ class Authsystem {
             // Redirect to forget $_GET Token
             $url = LinkMng::getUrl(array('token' => ''));
             header('Location: '.$url);
-        } elseif(sessionHandler::getInstance()->getSession('auth_token_acs') != null) {
+        } elseif(sessionHandler::getInstance()->getSession($this->sessionName) != null) {
             // Use Session
-            $token = sessionHandler::getInstance()->getSession('auth_token_acs');
+            $token = sessionHandler::getInstance()->getSession($this->sessionName);
             $this->renewToken($token);
-        } elseif(!sessionHandler::getInstance()->getCookie('auth_token_acs')) { // Check if there is a cookie when the user opens the site
-            $token = sessionHandler::getInstance()->getCookie('auth_token_acs');
+        } elseif(!sessionHandler::getInstance()->getCookie($this->sessionName)) { // Check if there is a cookie when the user opens the site
+            $token = sessionHandler::getInstance()->getCookie($this->sessionName);
             $this->renewToken($token);
         } else {
             // There is no variable with a token available
@@ -66,13 +72,13 @@ class Authsystem {
     }
     
     public function renewToken($token) {
-        sessionHandler::getInstance()->setSession('auth_token_acs', $token);
-        sessionHandler::getInstance()->setCookie('auth_token_acs', $token);
+        sessionHandler::getInstance()->setSession($this->sessionName, $token);
+        sessionHandler::getInstance()->setCookie($this->sessionName, $token);
         $this->currentToken = $token;
         return true;
         if($this->validateToken($token)) {
-            sessionHandler::getInstance()->setSession('auth_token_acs', $token);
-            sessionHandler::getInstance()->setCookie('auth_token_acs', $token);
+            sessionHandler::getInstance()->setSession($this->sessionName, $token);
+            sessionHandler::getInstance()->setCookie($this->sessionName, $token);
             $this->currentToken = $token;
             return true;
         } else {
@@ -84,8 +90,8 @@ class Authsystem {
      * forget the token saved -> this means logout basicly
      */
     public function forgetToken() {
-        sessionHandler::getInstance()->setSession('auth_token_acs', '');
-        sessionHandler::getInstance()->setCookie('auth_token_acs', '');
+        sessionHandler::getInstance()->setSession($this->sessionName, '');
+        sessionHandler::getInstance()->setCookie($this->sessionName, '');
         $this->currentToken = false;
     }
     
@@ -166,6 +172,7 @@ class Authsystem {
     }
     
     public function redirectIfNotLogin() {
+        
         // Check if database of AuthSystem-Client is setup properly - otherwise install it
         $sql = 'CREATE TABLE IF NOT EXISTS `authapp_client` (
           `request_id` INT(15) NOT NULL,
@@ -221,6 +228,8 @@ class Authsystem {
             // Now since the user has verified the client -> go to authenthicate the user
             $htmlentities = htmlentities(LinkMng::getUrl(array('getauth' => '')));
             $url = $this->authServer."&callback=".$htmlentities."&appid=".$this->appid."&req_id=".$req_id;
+            
+            
             header('Location: '.$url);
         } else {
             // OOPS THIS SHOULD NOT HAPPEN -> BUG/HACK

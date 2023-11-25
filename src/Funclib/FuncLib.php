@@ -7,7 +7,7 @@ namespace Funclib;
  * *************************************************************
  * Copyright notice
  *
- * (c) 2007 Sebastian Winterhalder <sw@internetgalerie.ch>
+ * (c) 2007 Sebastian Winterhalder <zeradun@embin.ch>
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -28,10 +28,12 @@ namespace Funclib;
  * *************************************************************
  */
 
+// a newer Version to luck
+
 /**
  * class.FuncLib
  *
- * @author Sebastian Winterhalder <sw@internetgalerie.ch>
+ * @author Sebastian Winterhalder <zeradun@embin.ch>
  *
  *
  */

@@ -12,9 +12,13 @@ class LinkMng {
         $appendix = "?";
         if(!isset($_GET) || empty($_GET)) {
             $arr_keys = array_keys($changed_variables);
+            $count = 0;
             foreach($arr_keys as $kx) {
                 if(strlen($changed_variables[$kx]) > 0) {
-                    $appendix .= "$kx=".$changed_variables[$kx];
+                    if($count > 0)
+                        $appendix .= "&";
+                        $appendix .= "$kx=".$changed_variables[$kx];
+                        $count++;
                 }
             }
         } else {

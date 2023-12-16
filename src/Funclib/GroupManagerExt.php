@@ -1,35 +1,54 @@
 <?php
 namespace Funclib;
 
-class GroupManagerExtern
+class GroupManagerExt
 {
+    private $groups;
     
     private function __construct() {
-        // Initialize Later
+        $this->groups = array();
     }
     
     private static $instance;
     
     public static function getInstance() {
         if(empty(FileLog::$instance)) {
-            GroupManagerExtern::$instance = new GroupManagerExtern();
+            GroupManagerExt::$instance = new GroupManagerExt();
         }
-        return GroupManagerExtern::$instance;
+        return GroupManagerExt::$instance;
     }
     
     public function ParseGroupResponse($response)
     {
         $result = array();
         
-        if(is_object($response))
+        if(is_object($response) && !empty($response->groups))
         {
-            
-            
-            
+            $arrKeys = get_object_vars($response->groups);
+            foreach($arrKeys as $group_id => $groupObj)
+            {
+                $group = new GroupExt();
+                $group->setFromObj($groupObj);
+                $this->addGroup($group);
+            }
         }
-        
         return $result;
     }
     
+    public function addGroup($group) {
+        $this->groups[$group->getId()] = $group;
+    }
+    
+    public function removeGroup($id) {
+        unset($this->groups[$id]);
+    }
+    
+    public function searchGroupById($id) {
+        if(isset($this->groups[$id])) {
+            return $this->groups[$id];
+        } else {
+            return null;
+        }
+    }
 }
 ?>

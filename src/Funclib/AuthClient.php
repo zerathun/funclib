@@ -9,14 +9,17 @@ use Funclib\sessionHandler;
 /**
  * This class/object ensures the correct authentification with the 0AuthServer
  */
-class Authsystem {
+class AuthClient {
     
     private $private_key = 'SET PRIVATE KEY GIVEN FROM EMBER AUTHORITY';
     private $appid = '999';
+    private $user_id = 0;
     private $authServer = 'https://auth.embin.ch?auth=login';
     private $isAuthenticated = false;
     private $currentToken;
     private $sessionName = "random_session_name";
+    private $refrTokenSession = "rnd_tk_sess";
+    private $userIdSessName;
     
     public function __construct() {
         
@@ -36,6 +39,7 @@ class Authsystem {
     {
         $this->sessionName = $session_name;
     }
+
     
     /**
      * this method is called once; when there is getvar cookie or session with a token it is once validated
@@ -43,56 +47,66 @@ class Authsystem {
      */
     public function checkAuthentification() {
         twigVariables::gI()->setVariable('login_url', "?getauth=1");
-        
         /**
          * If a Token is set on GET Variables (Response from the 0Auth2 Server then this token is taken and validated
          */
-        if(isset($_GET['token']) && strlen($_GET['token']) > 0) {
-            $this->renewToken($_GET['token']);
+        if(isset($_GET['token']) && strlen($_GET['token']) > 0 && !empty($_GET['refresh_token'])) {
+            $this->renewSession($_GET['token'], $_GET['refresh_token'], $_GET['uid']);
             // Redirect to forget $_GET Token
-            $url = LinkMng::getUrl(array('token' => ''));
+            $url = LinkMng::getUrl(array('token' => '', 'refresh_token' => '', 'uid' => ''));
             header('Location: '.$url);
         } elseif(sessionHandler::getInstance()->getSession($this->sessionName) != null) {
             // Use Session
             $token = sessionHandler::getInstance()->getSession($this->sessionName);
-            $this->renewToken($token);
-        } elseif(!sessionHandler::getInstance()->getCookie($this->sessionName)) { // Check if there is a cookie when the user opens the site
+            $rToken = sessionHandler::getInstance()->getSession($this->refrTokenSession);
+            $uid = sessionHandler::getInstance()->getSession($this->userIdSessName);
+            $this->renewSession($token, $rToken, $uid);
+        } elseif(!empty(sessionHandler::getInstance()->getCookie($this->sessionName))) {
+            // Check if there is a cookie when the user opens the site
             $token = sessionHandler::getInstance()->getCookie($this->sessionName);
-            $this->renewToken($token);
+            $rToken = sessionHandler::getInstance()->getCookie($this->refrTokenSession);
+            $uid = sessionHandler::getInstance()->getCookie($this->userIdSessName);
+            
+            $this->renewSession($token, $rToken, $uid);
         } else {
             // There is no variable with a token available
             // Therefore the user is not logged in
             $this->currentToken = false;
         }
-        
         // If the user is not yet authenticated and wants to get authenticated redirect to the Auth-Page
         if(isset($_GET['getauth']) && !$this->isAuthenticated()) {
             $this->redirectIfNotLogin();
         }
     }
     
-    public function renewToken($token) {
+    public function renewSession($token, $refresh_token, int $user_id) {
         sessionHandler::getInstance()->setSession($this->sessionName, $token);
         sessionHandler::getInstance()->setCookie($this->sessionName, $token);
+        
+        sessionHandler::getInstance()->setSession($this->refrTokenSession, $refresh_token);
+        sessionHandler::getInstance()->setCookie($this->refrTokenSession, $refresh_token);
+        
+        sessionHandler::getInstance()->setSession($this->userIdSessName, $user_id);
+        sessionHandler::getInstance()->setCookie($this->userIdSessName, $user_id);
+        
         $this->currentToken = $token;
+        $this->refreshToken = $refresh_token;
+        $this->user_id = $user_id;
+        
         return true;
-        if($this->validateToken($token)) {
-            sessionHandler::getInstance()->setSession($this->sessionName, $token);
-            sessionHandler::getInstance()->setCookie($this->sessionName, $token);
-            $this->currentToken = $token;
-            return true;
-        } else {
-            return false;
-        }
     }
     
     /**
      * forget the token saved -> this means logout basicly
      */
-    public function forgetToken() {
-        sessionHandler::getInstance()->setSession($this->sessionName, '');
-        sessionHandler::getInstance()->setCookie($this->sessionName, '');
-        $this->currentToken = false;
+    public function forgetToken($redirect = false) {
+        $this->renewSession(false, false, 0);
+        
+        if($redirect)
+        {
+            $url = LinkMng::getUrl(array('token' => '', 'refresh_token' => '', 'uid' => ''));
+            header('Location: '.$url);
+        }
     }
     
     /**
@@ -112,8 +126,10 @@ class Authsystem {
     public function getAuthData($type) {
         if($this->isAuthenticated()) {
             $client = new Client();
-            $response = $client->request('POST', 'https://auth.embin.ch?auth=data', [
-                'multipart' => [
+            
+            if($this->validateToken($this->currentToken))
+            {
+                $multipart = [
                     [
                         'name' =>  'token',
                         'contents' => $this->currentToken
@@ -123,16 +139,25 @@ class Authsystem {
                         'contents' => $type
                     ],
                     [
+                        'name' =>  'uid',
+                        'contents' => $this->user_id,
+                    ],
+                    [
                         'name' =>  'appid',
                         'contents' => $this->appid
-                    ]
-                ]
-            ]
-                );
-            
-            $result = json_decode($response->getBody()->getContents());
-            $this->renewToken($result->response->request->token);
-            return $result;
+                    ]];
+                
+                
+                $response = $client->request('POST', 'https://auth.embin.ch?auth=data',
+                    [ 'multipart' => $multipart ]
+                 );
+                
+                $result = json_decode($response->getBody()->getContents());
+                return $result;
+            } else 
+            {
+                
+            }
         } else {
             return false;
         }
@@ -146,25 +171,86 @@ class Authsystem {
      */
     private function validateToken($token) {
         $client = new Client(); // GuzzleHttp Client for a HTML Response of the Server
-        $url = 'https://auth.embin.ch?auth=user&&appid='.$this->appid."&token=".$token;
+        $url = 'https://auth.embin.ch?auth=user&appid='.$this->appid."&token=".$token."&uid=".$this->user_id;
+
         $res = $client->request('GET', $url, [
             'auth' => ['user', 'pass']
-        ]
-            );
+            ]
+        );
+        
+        // Status Code of the HTTP-Request is successful when 200
+        // When correct HTTP Response has received, Check the Content if authentification data is correct
         if($res->getStatusCode() == 200) {
             $json = $res->getBody()->getContents();
             $result = json_decode($json);
-            
-            print 'validate token';
-            if($result->response->auth == 'success') {
-                if(!empty($result->response->token))
-                    $this->currentToken = $result->response->token;
+          
+            if($result->response->code == 700)
+            {
+                // Token is outdated and needs to be renewed;
+                // Returns false if the Refresh-Token is invalid
+                // Returns true if the Refresh-Token is valid and could be updated to a new one
+                $boolResult = $this->renewTokenPubl();
+                if($boolResult){
                     return true;
-            }
-            else {
+                }
+                else {
+                    $this->forgetToken(true);
+                    return false;
+                }
+            } 
+            else if($result->response->code == 200) // Ëquivalent with $result->response->auth == 'success'
+            {
+                // Token is valid and can be used to fetch data e.g.
+                $this->currentToken = $result->response->token;
+                return true;
+            } else 
+            {
+                $this->forgetToken(true);
                 return false;
             }
-        } return false;
+        }
+        return false;
+    }
+    
+    public function renewTokenPubl()
+    {
+        $rToken = sessionHandler::getInstance()->getCookie($this->refrTokenSession);
+        if(empty($rToken))
+        {
+            $rToken = sessionHandler::getInstance()->getSession($this->refrTokenSession);
+        }
+        if(!empty($rToken))
+        {
+            return $this->renewTokenArg($rToken);
+        }
+        return false;
+    }
+    
+    private function renewTokenArg($refresh_token)
+    {
+        $client = new Client(); // GuzzleHttp Client for a HTML Response of the Server
+        $url = 'https://auth.embin.ch?auth=user&appid='.$this->appid."&refresh_token=".$refresh_token."&uid=".$this->user_id;
+
+        $res = $client->request('GET', $url, 
+            [
+            'auth' => ['user', 'pass']
+                ]
+            );
+        
+        if($res->getStatusCode() == 200) {
+            $json = $res->getBody()->getContents();
+
+            $result = json_decode($json);
+            
+            if($result->response->code == 300)
+            {
+                $this->renewSession($result->response->token, $result->response->refresh_token, $result->response->uid);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
     
     private function getRedirectUrl() {
@@ -172,7 +258,7 @@ class Authsystem {
     }
     
     public function redirectIfNotLogin() {
-        
+
         // Check if database of AuthSystem-Client is setup properly - otherwise install it
         $sql = 'CREATE TABLE IF NOT EXISTS `authapp_client` (
           `request_id` INT(15) NOT NULL,

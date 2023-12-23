@@ -12,19 +12,19 @@ class GroupManagerExt
     private static $instance;
     
     public static function getInstance() {
-        if(empty(FileLog::$instance)) {
+        if(empty(GroupManagerExt::$instance)) {
             GroupManagerExt::$instance = new GroupManagerExt();
         }
         return GroupManagerExt::$instance;
     }
     
-    public function ParseGroupResponse($response)
+    public function ParseGroupResponse($groups)
     {
         $result = array();
         
-        if(is_object($response) && !empty($response->groups))
+        if(is_object($groups) && !empty($groups))
         {
-            $arrKeys = get_object_vars($response->groups);
+            $arrKeys = get_object_vars($groups);
             foreach($arrKeys as $group_id => $groupObj)
             {
                 $group = new GroupExt();

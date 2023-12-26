@@ -1,5 +1,5 @@
 <?php 
-namespace EmbDev\models;
+namespace Funclib;
 
 use EmbDev\models\ssoHandler;
 use Database\Database;

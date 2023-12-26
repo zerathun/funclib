@@ -16,7 +16,7 @@ class ErrorHandler extends EList implements Displayable {
     public function __construct() {
     }
     
-    private static $errorHandler;
+    protected static $errorHandler;
     private $display_trace = true;
     
     /**

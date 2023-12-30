@@ -113,12 +113,32 @@ class AuthClient {
      * Checks if the user is authenticated (logged in), if so returned true
      * It is assumed (for performance issues) when there is a token it is valid
      */
-    public function isAuthenticated() {
+    public function isAuthenticated() : bool {
         if(empty($this->currentToken) || $this->currentToken === false)
             return false;
             else return true;
             return null;
     }
+    
+    /**
+     * Checks if the user is authenticated and returns the Auth-User Id (Unique)
+     * 
+     * @return int
+     */
+    public function GetUserId() : int {
+        if($this->isAuthenticated())
+        {
+            $uid = sessionHandler::getInstance()->getSession($this->userIdSessName);
+            if(empty($uid))
+                $uid = sessionHandler::getInstance()->getCookie($this->userIdSessName);
+                return $uid;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
     
     /**
      * If the user is correctly authenticated data can be fetched from the AUTH Server

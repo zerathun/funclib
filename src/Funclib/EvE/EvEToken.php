@@ -28,6 +28,18 @@ class EvEToken
         
     }
     
+    public function IsExpired() : bool
+    {
+        return (!empty($this->timestamp) && !empty($this->expires_in) && ($this->timestamp + $this->expires_in < time()));        
+    }
+    
+    public function IsNotExpired() : bool
+    {
+        return !$this->IsExpired();
+    }
+    
+    
+    
     // Define the getter methods for the properties
     public function getUser_id() {
         return $this->user_id;

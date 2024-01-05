@@ -151,73 +151,66 @@ class EvE_ESI_Caller {
      */
     public function callESI(string $method, int $identKey, $args=array(), bool $use_cache=true, int $expire=(3600*6), $throw_errors=false) {
         if($identKey == null OR $identKey <= 0) {
-            throw new \Exception("Ident Key is not valid!");
+            throw new Exception("Ident Key is not valid!");
         }
         if(empty($this->methods[$method]))
             throw new Exception("The Wanted CALL ESI Method is Unknown");
-        if(empty($this->methods[$method]['class']))
-            throw new Exception("Class unknown!");
-        $class = $this->methods[$method]['class'];
+            if(empty($this->methods[$method]['class']))
+                throw new Exception("Class unknown!");
+                $class = $this->methods[$method]['class'];
                 
                 
-        if($use_cache) {
-            PerformanceMeasure::getInstance()->addMeasurementCheckpoint("db_".$method);
-            
-            $sql = "SELECT * FROM auth_esicache WHERE class = '$class' AND methodFunction = '$method' AND ident_key = '".$identKey."' AND timestamp  > ".(time()-$expire);
-            $row = null;
-            try {
-                $row = Database::getInstance()->sql_fetch_array(Database::getInstance()->sql_query($sql));
-            } catch (Exception $e) {
-                print $e;
-            }
-        }
-        
-        if(!empty($row) && $use_cache) {
-            $object = json_decode($row['value']);
-            PerformanceMeasure::getInstance()->stopMeasurementCheckpoint("db_".$method);
-            return $object;
-        } else {
-            PerformanceMeasure::getInstance()->addMeasurementCheckpoint($method);
-            try {
-                if(count($args) < 1) 
-                    $args[0] = $identKey;
-                $result = $this->callMethod($method, $args);
-            } catch (ApiException $e) {
-                $ssoHandler = new ssoHandler();
-                $ssoHandler->refreshAllTokens();
-                try {
-                    $result = $this->callMethod($method, $args);
-                } catch (ApiException $e) {
-                    $delInvalidToken = "DELETE FROM auth_evetokens WHERE AccessToken = '".$this->config->getAccessToken()."'";
-                    //Database::getInstance()->sql_query($delInvalidToken);
-                    ErrorHandler::getErrorHandler()->addError("Currently used access token is not valid/temporarly unavailable");
-                    if($throw_errors)
-                        throw $e;
-                    else {
+                if($use_cache) {
+                    PerformanceMeasure::getInstance()->addMeasurementCheckpoint("db_".$method);
+                    
+                    $sql = "SELECT * FROM auth_esicache WHERE class = '$class' AND methodFunction = '$method' AND ident_key = '".$identKey."' AND timestamp  > ".(time()-$expire);
+                    $row = null;
+                    try {
+                        $row = Database::getInstance()->sql_fetch_array(Database::getInstance()->sql_query($sql));
+                    } catch (Exception $e) {
                         ErrorHandler::getErrorHandler()->addException($e);
-                    return false;
                     }
                 }
-            } catch (\Exception $e) {
-                print_r($e);
-            }
-            
-            $object = ObjectSerializer::sanitizeForSerialization($result);
-            $formed_Obj = $this->formResult($object);
-            $serialized = json_encode($formed_Obj);
-            $serialized = Database::getInstance()->PDOQuote($serialized);
-            
-            $sql = "INSERT INTO auth_esicache (class, methodFunction, ident_key, timestamp, value) 
-                VALUES ('$class', '$method', ".$args[0].", ".time().", ".$serialized.")
+                
+                if(!empty($row) && $use_cache) {
+                    $object = json_decode($row['value']);
+                    PerformanceMeasure::getInstance()->stopMeasurementCheckpoint("db_".$method);
+                    if(empty($object))
+                        return array();
+                        return $object;
+                } else {
+                    PerformanceMeasure::getInstance()->addMeasurementCheckpoint($method);
+                    try {
+                        if(count($args) < 1)
+                            $args[0] = $identKey;
+                            //$result = $this->callMethod($method, $args);
+                    } catch (ApiException $e) {
+                        ErrorHandler::getErrorHandler()->addException($e);
+                    } catch (Exception $e) {
+                        ErrorHandler::getErrorHandler()->addException($e);
+                    }
+                    
+                    $object = ObjectSerializer::sanitizeForSerialization($result);
+                    $formed_Obj = $this->formResult($object);
+                    $serialized = json_encode($formed_Obj);
+                    $serialized = Database::getInstance()->PDOQuote($serialized);
+                    
+                    $sql = "INSERT INTO auth_esicache (class, methodFunction, ident_key, timestamp, value)
+                VALUES ('$class', '$method', ".$identKey.", ".time().", ".$serialized.")
             ON DUPLICATE KEY UPDATE class='$class', methodFunction='$method', ident_key=".$identKey.", timestamp=".time().", value=".$serialized."";
-            try {
-                Database::getInstance()->sql_query($sql);
-            } catch (Exception $e) {
-                print $e;
-            }
-            PerformanceMeasure::getInstance()->stopMeasurementCheckpoint($method);
-            return $formed_Obj;
-        }
+                    
+                    try {
+                        Database::getInstance()->sql_query($sql);
+                    } catch (Exception $e) {
+                        ErrorHandler::getErrorHandler()->addException($e);
+                    }
+                    PerformanceMeasure::getInstance()->stopMeasurementCheckpoint($method);
+                    if(empty($formed_Obj))
+                    {
+                        return array();
+                    }
+                    return $formed_Obj;
+                }
     }
     
     private function formResult($result) {

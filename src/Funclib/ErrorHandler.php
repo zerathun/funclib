@@ -76,7 +76,7 @@ class ErrorHandler extends EList implements Displayable {
         }
     }
     
-    public function AddExceptionWConverter(\Exception $e, ExceptionMessageConverter $emc)
+    public function AddExceptionWConverter(\Exception $e, ExceptionMessageConverter $emc, $log_level)
     {
         if ($e instanceof \Exception) {
             $msg = $emc->ConvertExceptionMessage($e);

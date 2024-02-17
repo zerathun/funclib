@@ -5,6 +5,8 @@ use Funclib\Useables\EList;
 use Funclib\FileLog;
 use Funclib\Useables\ErrorItem;
 use Funclib\Ifaces\Displayable;
+use Funclib\Ifaces\ZeraLogger;
+use Funclib\Ifaces\ExceptionMessageConverter;
 use \Exception as Exception;
 
 
@@ -18,19 +20,20 @@ class ErrorHandler extends EList implements Displayable {
     
     protected static $errorHandler;
     private $display_trace = true;
+    private $logger = array();
     
     /**
      *
-     * @return \ClassLibrary\system\ErrorHandler
+     * @return ErrorHandler
      */
-    public static function getErrorHandler() {
+    public static function getErrorHandler() : ErrorHandler {
         if (empty ( ErrorHandler::$errorHandler )) {
             ErrorHandler::$errorHandler = new ErrorHandler ();
         }
         return ErrorHandler::$errorHandler;
     }
     
-    public function addError($error_message, int $index=0, bool $system_err=false) {
+    public function addError($error_message, int $index=0, bool $system_err=false, int $log_level = 0) : void {
         if($system_err)
             FileLog::getInstance()->appendLog($error_message."(".$this->getCount().")");
             
@@ -39,9 +42,18 @@ class ErrorHandler extends EList implements Displayable {
             }
             $errorItem = new ErrorItem ( $error_message, $index );
             $this->addItem ( $errorItem );
+            
+            // Go through each instance of the logger to append the logs to all registered logger
+            foreach($this->logger as $ZeraLogger)
+            {
+                if($ZeraLogger instanceof ZeraLogger && $ZeraLogger->UseLog())
+                {
+                    $ZeraLogger->WriteLog($error_message, $log_level, "");
+                }
+            }
     }
     
-    public function errorNoExists($index) {
+    public function errorNoExists($index)  {
         $this->resetListIndex();
         if($this->count() <= 0)
             return false;
@@ -61,6 +73,18 @@ class ErrorHandler extends EList implements Displayable {
             default :
                 $this->addError ( "Standard error message: The error #" . $error_no . " does not exist!" );
                 break;
+        }
+    }
+    
+    public function AddExceptionWConverter(\Exception $e, ExceptionMessageConverter $emc)
+    {
+        if ($e instanceof \Exception) {
+            $msg = $emc->ConvertExceptionMessage($e);
+            if ($this->display_trace)
+                $msg .= "<br>" . $e->getTraceAsString ();
+            $this->addError ( $msg );
+        } else {
+            $this->addError ( "No Exception found" );
         }
     }
     
@@ -110,6 +134,7 @@ class ErrorHandler extends EList implements Displayable {
     }
     
     public function getOutput() {
+        throw new Exception("This Method is deprecated");
         $template = new TemplateReader ();
         $template->readFile ( "Templates/ErrorWindow.html" );
         $output = "";
@@ -126,12 +151,11 @@ class ErrorHandler extends EList implements Displayable {
         return $template->getOutput ();
     }
     
-    public function logError(\Exception $e) {
-        print "Logging error: " . $e->getMessage ();
-        $sql = "INSERT INTO emb_log ('time', 'log_message', 'error_type', 'error_line', 'error_file')
-					VALUES ('" . time () . "', '" . $e->getMessage () . "', '" . $e->getCode () . "', '" . $e->getLine () . "', '" . $e->getFile () . "');";
-        Database::getInstance ()->sql_query ( $sql );
+    public function AddLogger(ZeraLogger $logger)
+    {
+        $this->logger[] = $logger;
     }
+
 }
 
 ?>

@@ -1,6 +1,7 @@
 <?php 
 namespace Funclib;
 
+use \Exception as Exception;
 use EmbDev\models\ssoHandler;
 use Database\Database;
 use Funclib\ErrorHandler;
@@ -149,8 +150,8 @@ class EvE_ESI_Caller {
      * @throws Ambigous <Exception, ApiException>
      * @return boolean|unknown
      */
-    public function callESI(string $method, int $identKey, $args=array(), bool $use_cache=true, int $expire=(3600*6), $throw_errors=false) {
-        if($identKey == null OR $identKey <= 0) {
+    public function callESI(string $method, int|string $identKey, $args=array(), bool $use_cache=true, int $expire=(3600*6), $throw_errors=false) {
+        if(($identKey == null OR $identKey <= 0) && !is_string($identKey)) {
             throw new Exception("Ident Key is not valid!");
         }
         if(empty($this->methods[$method]))
@@ -173,17 +174,19 @@ class EvE_ESI_Caller {
                 }
                 
                 if(!empty($row) && $use_cache) {
+                    
+                    print_r($row);
+                    
                     $object = json_decode($row['value']);
                     PerformanceMeasure::getInstance()->stopMeasurementCheckpoint("db_".$method);
-                    if(empty($object))
-                        return array();
-                        return $object;
+                    
+                    return $object;
                 } else {
                     PerformanceMeasure::getInstance()->addMeasurementCheckpoint($method);
                     try {
                         if(count($args) < 1)
                             $args[0] = $identKey;
-                            //$result = $this->callMethod($method, $args);
+                            $result = $this->callMethod($method, $args);
                     } catch (ApiException $e) {
                         ErrorHandler::getErrorHandler()->addException($e);
                     } catch (Exception $e) {
@@ -191,8 +194,10 @@ class EvE_ESI_Caller {
                     }
                     
                     $object = ObjectSerializer::sanitizeForSerialization($result);
+                    
                     $formed_Obj = $this->formResult($object);
                     $serialized = json_encode($formed_Obj);
+                    
                     $serialized = Database::getInstance()->PDOQuote($serialized);
                     
                     $sql = "INSERT INTO auth_esicache (class, methodFunction, ident_key, timestamp, value)
@@ -205,10 +210,6 @@ class EvE_ESI_Caller {
                         ErrorHandler::getErrorHandler()->addException($e);
                     }
                     PerformanceMeasure::getInstance()->stopMeasurementCheckpoint($method);
-                    if(empty($formed_Obj))
-                    {
-                        return array();
-                    }
                     return $formed_Obj;
                 }
     }

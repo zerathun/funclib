@@ -88,6 +88,20 @@ class ErrorHandler extends EList implements Displayable {
         }
     }
     
+    public function AddExceptionConv(\Exception $e, int $log_level)
+    {
+        if(empty($this->eConverter) && $this->eConverter instanceof ExceptionMessageConverter)
+            throw new Exception("ExceptionMessageConverter is not set");
+            $this->AddExceptionWConverter($e, $this->eConverter, $log_level);
+    }
+    
+    private ExceptionMessageConverter $eConverter;
+    
+    public function SetConverter(ExceptionMessageConverter $eConverter)
+    {
+        $this->eConverter = $eConverter;
+    }
+    
     public function addException(\Exception $e) {
         if ($e instanceof \Exception) {
             $msg = $e->getMessage ();

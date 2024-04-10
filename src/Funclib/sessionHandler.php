@@ -47,6 +47,21 @@ class sessionHandler {
                 return $_COOKIE[$this->getSessionPrefix().$name];
     }
     
+    public function getSessionOverCookie($name)
+    {
+        if(!empty($_SESSION[$this->getSessionPrefix().$name]))
+            return $_SESSION[$this->getSessionPrefix().$name];
+            else if (!empty ($_COOKIE[$this->getSessionPrefix().$name]))
+                return $_COOKIE[$this->getSessionPrefix().$name];
+                else return false;
+    }
+    
+    public function setSessionAndCookie($name, $value)
+    {
+        $this->setSession($name, $value);
+        $this->setCookei($name, $value);
+    }
+    
     /**
      * Set the Session Prefix the first time the sessionHandler is instantiated
      *

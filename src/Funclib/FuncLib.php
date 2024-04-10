@@ -37,6 +37,7 @@ namespace Funclib;
  *
  *
  */
+
 class FuncLib {
     const ARRAY_PREFIX = 'uName';
     const FORM_POST_PREFIX = 'MFFORM';

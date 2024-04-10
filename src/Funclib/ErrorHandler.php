@@ -170,6 +170,11 @@ class ErrorHandler extends EList implements Displayable {
         $this->logger[] = $logger;
     }
 
+    public function DisplayTrace(bool $bool)
+    {
+        $this->display_trace = $bool;
+    }
+    
 }
 
 ?>

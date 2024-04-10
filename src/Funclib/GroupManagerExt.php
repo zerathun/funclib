@@ -20,8 +20,6 @@ class GroupManagerExt
     
     public function ParseGroupResponse($groups)
     {
-        $result = array();
-        
         if(is_object($groups) && !empty($groups))
         {
             $arrKeys = get_object_vars($groups);
@@ -32,7 +30,14 @@ class GroupManagerExt
                 $this->addGroup($group);
             }
         }
-        return $result;
+        return $this->groups;
+    }
+    
+    public function GetGroups()
+    {
+        if(isset($this->groups))
+            return $this->groups;
+            else return false;
     }
     
     public function addGroup($group) {

@@ -42,7 +42,6 @@ class AssetsList extends ItemList implements AccessibleModule, Displayable, Stor
 	 * @see \system\AccessibleModule::hasAccess()
 	 */
 	public function hasAccess() {
-		// TODO Auto-generated method stub
 		return UserManagement::getInstance ()->getCurrentUser ()->getGroup ()->hasAccess ( 'assets_access' );
 	}
 	

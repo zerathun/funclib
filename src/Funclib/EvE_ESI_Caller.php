@@ -38,6 +38,7 @@ use Swagger\Client\Api\UniverseApi;
 use Swagger\Client\Api\UserInterfaceApi;
 use Swagger\Client\Api\WalletApi;
 use Swagger\Client\Api\WarsApi;
+use Funclib\EvE\EvEToken;
 
 class EvE_ESI_Caller {
     
@@ -174,9 +175,7 @@ class EvE_ESI_Caller {
                 }
                 
                 if(!empty($row) && $use_cache) {
-                    
-                    print_r($row);
-                    
+                                        
                     $object = json_decode($row['value']);
                     PerformanceMeasure::getInstance()->stopMeasurementCheckpoint("db_".$method);
                     
@@ -254,6 +253,56 @@ class EvE_ESI_Caller {
                 return false;
             }
         } else return false;
+    }
+    
+    
+    /**
+     * VARIABLE {VARIABLE}
+     * 
+     * @param string $method
+     * @param string $url
+     * @param EvEToken $token
+     * @return mixed|NULL[][]|boolean
+     */
+    public function DirectCallESI(string $post_url, EvEToken $token = null)
+    {
+        // CURL ALTERNATIVE
+        //$url = preg_replace($pattern, $replacement, $subject)
+        
+        //$post_url = "https://esi.evetech.net/latest/corporations/$corp_id/titles/?datasource=tranquility";
+        $curl = curl_init($post_url);
+        
+        if($token != null) {
+            $headers = array(
+                // 'Content-Type: application/json',
+                'accept: application/json',
+                'authorization: Bearer '.$token->getAccessToken()
+            );
+        } else {
+            $headers = array(
+                // 'Content-Type: application/json',
+                'accept: application/json',
+            );
+        }
+        
+        //curl_setopt($curl, CURLOPT_USERPWD, "username":"Password");
+        curl_setopt($curl, CURLOPT_URL, $post_url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        //curl_setopt($curl, CURLOPT_POST, false);
+        //curl_setopt($curl, CURLOPT_POSTFIELDS,json_encode($post_data) );
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        
+        try {
+            $post_response = curl_exec($curl);
+            
+        } catch (Exception $e) {
+            ErrorHandler::getErrorHandler()->addException($e);
+        }
+        
+        $response = json_decode($post_response);
+        
+        return $response;        
     }
     
 }

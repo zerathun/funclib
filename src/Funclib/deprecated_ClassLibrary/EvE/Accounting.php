@@ -25,9 +25,11 @@ class Accounting extends ItemList implements AccessibleModule, Displayable, Stor
 		}
 	}
 	public function DB_Store() {
+	    // TODO
 	}
+	
 	public function DB_Delete() {
-		// TODO Auto-generated method stub
+	    // TODO
 	}
 	
 	/*
@@ -35,7 +37,6 @@ class Accounting extends ItemList implements AccessibleModule, Displayable, Stor
 	 * @see \system\AccessibleModule::hasAccess()
 	 */
 	public function hasAccess() {
-		// TODO Auto-generated method stub
 		return UserManagement::getInstance ()->getCurrentUser ()->getGroup ()->hasAccess ( 'assets_access' );
 	}
 }

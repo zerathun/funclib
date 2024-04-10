@@ -239,7 +239,6 @@ class APIKey implements Storable {
 	 * @see \ClassLibrary\Ifaces\Storable::DB_Store()
 	 */
 	public function DB_Store() {
-		// TODO Auto-generated method stub
 		$SQL = "SELECT count(emb_api.apikeyID) as numbr, emb_api.*
 					FROM emb_api
 					WHERE apikeyID = '" . $this->getAPIKey () . "'";
@@ -287,7 +286,6 @@ class APIKey implements Storable {
 	 * @see \ClassLibrary\Ifaces\Storable::DB_Delete()
 	 */
 	public function DB_Delete() {
-		// TODO Auto-generated method stub
 		$SQL = "DELETE FROM emb_api_user WHERE emb_api_user.apikeyID = " . $this->getAPIKey () . " AND emb_api_user.embuserID = " . UserManagement::getInstance ()->getCurrentUser ()->getId ();
 		Database::getInstance ()->sql_query ( $SQL );
 		$SQ1 = "SELECT count(apikeyID) as nrm FROM emb_api_user WHERE emb_api_user.apikeyID = " . $this->getAPIKey () . "";

@@ -151,20 +151,22 @@ class LinkMng {
     }
     
     
+    
     public static function getCharacterImageUrl($character_id, $size)
     {
         switch($size)
         {
             case 64: $ssize = 64; break;
-            case 32: $ssize = 32; break;
             case 128: $ssize = 128; break;
             case 256: $ssize = 256; break;
             case 512: $ssize = 512; break;
-            case 1024: $ssize = 1024; break;
             default: $ssize = 64;
         }
         
+        /*
         $url = "https://image.eveonline.com/Character/".$character_id."_".$ssize.".jpg";
+        ;*/
+        $url = "https://images.evetech.net/characters/$character_id/portrait?tenant=tranquility&size=$ssize";
         return $url;
     }
     

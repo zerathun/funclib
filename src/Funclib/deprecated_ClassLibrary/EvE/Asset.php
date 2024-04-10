@@ -259,7 +259,6 @@ class Asset extends ItemList {
 	 * @see \ClassLibrary\EvE\ItemList::DB_Store()
 	 */
 	public function DB_Store() {
-		// TODO Auto-generated method stub
 		throw new \Exception ( "This method is not being used" );
 	}
 	
@@ -268,7 +267,6 @@ class Asset extends ItemList {
 	 * @see \ClassLibrary\EvE\ItemList::DB_Delete()
 	 */
 	public function DB_Delete() {
-		// TODO Auto-generated method stub
 		throw new \Exception ( "This method is not being used" );
 	}
 }

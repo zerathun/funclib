@@ -51,15 +51,15 @@ class sessionHandler {
     {
         if(!empty($_SESSION[$this->getSessionPrefix().$name]))
             return $_SESSION[$this->getSessionPrefix().$name];
-            else if (!empty ($_COOKIE[$this->getSessionPrefix().$name]))
-                return $_COOKIE[$this->getSessionPrefix().$name];
-                else return false;
+        else if (!empty ($_COOKIE[$this->getSessionPrefix().$name]))
+            return $_COOKIE[$this->getSessionPrefix().$name];
+        else return false;
     }
     
     public function setSessionAndCookie($name, $value)
     {
         $this->setSession($name, $value);
-        $this->setCookei($name, $value);
+        $this->setCookie($name, $value);
     }
     
     /**

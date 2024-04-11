@@ -305,6 +305,72 @@ class EvE_ESI_Caller {
         return $response;        
     }
     
+    public function SearchApi($searchString = '', $Category, EvEToken $token, $strict = false)
+    {
+        // Only allow a specific category allowed by ESI Call
+        switch(strtolower($Category))
+        {
+            case "agent": $Category = $Category; break;
+            case "alliance":  $Category = $Category; break;
+            case "character":  $Category = $Category; break;
+            case "constellation":  $Category = $Category; break;
+            case "corporation":  $Category = $Category; break;
+            case "faction":  $Category = $Category; break;
+            case "inventory_type":  $Category = $Category; break;
+            case "region":  $Category = $Category; break;
+            case "solar_system":  $Category = $Category; break;
+            case "station":  $Category = $Category;  break;
+            case "structure":  $Category = $Category; break;
+            default: $Category = "agent"; break;
+        }
+        
+        if($strict)
+            $strict = "true";
+            else
+                $strict = "false";
+                
+                $CharacterID = $token->getCharacterID();
+                
+                $post_url = "https://esi.evetech.net/latest/characters/".$CharacterID."/search/?categories=".$Category."&datasource=tranquility&language=en&search=".$searchString."&strict=".$strict."";
+                $curl = curl_init($post_url);
+                
+                if($token != null) {
+                    $headers = array(
+                        // 'Content-Type: application/json',
+                        'accept: application/json',
+                        'authorization: Bearer '.$token->getAccessToken()
+                    );
+                } else {
+                    throw new Exception("Token is not valid");
+                }
+                
+                //curl_setopt($curl, CURLOPT_USERPWD, "username":"Password");
+                curl_setopt($curl, CURLOPT_URL, $post_url);
+                curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+                //curl_setopt($curl, CURLOPT_POST, false);
+                //curl_setopt($curl, CURLOPT_POSTFIELDS,json_encode($post_data) );
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+                
+                try {
+                    $post_response = curl_exec($curl);
+                    
+                    
+                    
+                } catch (Exception $e) {
+                    ErrorHandler::getErrorHandler()->addException($e);
+                }
+                
+                $response = json_decode($post_response);
+                
+                if(!empty($response->error))
+                {
+                    ErrorHandler::getErrorHandler()->addException(new Exception("EvE ESI Error: ".$response->error));
+                }
+                
+                return $response;
+    }
+    
 }
 
 ?>

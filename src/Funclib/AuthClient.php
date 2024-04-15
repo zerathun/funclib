@@ -41,6 +41,7 @@ class AuthClient {
     }
 
     
+    
     /**
      * this method is called once; when there is getvar cookie or session with a token it is once validated
      * the token is set to the object if the token is valid other wise it is set false;

@@ -305,6 +305,132 @@ class EvE_ESI_Caller {
         return $response;        
     }
     
+    
+    private static $curl_useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.91 Safari/537.36';
+    private $SoftwareClient_ID = "";
+    private $secret_key = "";
+    
+    public function SetSoftwareClientId($string)
+    {
+        $this->SoftwareClient_ID = $string;
+    }
+    
+    public function SetClientSecretKey($string)
+    {
+        $this->secret_key = $string;
+    }
+    
+    private function performCurlRequest($fields) {
+        $header='Authorization: Basic '.base64_encode($this->SoftwareClient_ID.':'.$this->secret_key);
+        $fields_string='';
+        foreach ($fields as $key => $value) {
+            $fields_string .= $key.'='.$value.'&';
+        }
+        rtrim($fields_string, '&');
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, 'https://login.eveonline.com/oauth/token');
+        curl_setopt($ch, CURLOPT_USERAGENT, EvE_ESI_Caller::$curl_useragent);
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array($header));
+        curl_setopt($ch, CURLOPT_POST, count($fields));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        $result = curl_exec($ch);
+        
+        if ($result===false) {
+            auth_error(curl_error($ch));
+        }
+        curl_close($ch);
+        return json_decode($result);
+    }
+    
+    public function CheckIfTokenExpired(EvETOken $token)
+    {
+        return (($token->getTimestamp() + $token->getExpires_in() - 60) < time());
+    }
+    
+    
+    private function GenerateUrlEncodedPost($array)
+    {
+        $result = "";
+        foreach($array as $key => $value)
+        {
+            $result .= $key . "?" . htmlspecialchars($value);
+        }
+        return $result;
+    }
+    
+    
+    
+    
+    /**
+     * VARIABLE {VARIABLE}
+     *
+     * @param string $method
+     * @param string $url
+     * @param EvEToken $token
+     * @return mixed|NULL[][]|boolean
+     */
+    public function DirectESICallGET(string $url_without_fields, $fields, EvEToken $token = null)
+    {
+        if(!empty($token) && $this->CheckIfTokenExpired($token))
+        {
+            $token = $this->RefreshToken($token);
+        }
+        
+        if(!empty($token))
+        {
+            $headers = array(
+                'Accept: application/json',
+                'authorization: Bearer '.$token->getAccessToken(),
+            );
+        } else {
+            $headers = array(
+                'Accept: application/json',
+            );
+        }
+        
+        
+        $fields_string='';
+        foreach ($fields as $key => $value) {
+            $fields_string .= $key.'='.$value.'&';
+        }
+        rtrim($fields_string, '&');
+        
+        $url_without_fields .= "?".$fields_string;
+        
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $url_without_fields);
+        curl_setopt($ch, CURLOPT_USERAGENT, EvE_ESI_Caller::$curl_useragent);
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        //curl_setopt($ch, CURLOPT_POST, count($fields));
+        //curl_setopt($ch, CURLOPT_POST, 0);
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, null);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        
+        
+        curl_setopt($ch, CURLINFO_HEADER_OUT, false); // enable tracking
+        
+        $result = curl_exec($ch);
+        //$headerSent = curl_getinfo($ch, CURLINFO_HEADER_OUT ); // request headers
+        //print_r($headerSent);
+        
+        if ($result===false) {
+            
+            print_r(curl_error($ch));
+        }
+        curl_close($ch);
+        return json_decode($result);
+    }
+    
+    
     public function SearchApi($searchString = '', $Category, EvEToken $token, $strict = false)
     {
         // Only allow a specific category allowed by ESI Call

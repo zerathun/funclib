@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Funclib;
 
 use \Exception as Exception;
@@ -122,9 +122,9 @@ class EvE_ESI_Caller {
         
         $time = mktime(10,07,10,5,4,2009);
         if(is_array($arr1) && is_array($arr2) && is_array($arr3) && is_array($arr4))
-        $time = mktime(intval($arr4[0]), intval($arr4[1]), intval($arr4[2]), intval($arr2[2]), intval($arr2[1]), intval($arr2[0]));
-
-        return $time;
+            $time = mktime(intval($arr4[0]), intval($arr4[1]), intval($arr4[2]), intval($arr2[2]), intval($arr2[1]), intval($arr2[0]));
+            
+            return $time;
     }
     
     public function setToken() {
@@ -141,7 +141,7 @@ class EvE_ESI_Caller {
     }
     
     /**
-     * 
+     *
      * @param string $method
      * @param int $identKey
      * @param array $args
@@ -175,7 +175,7 @@ class EvE_ESI_Caller {
                 }
                 
                 if(!empty($row) && $use_cache) {
-                                        
+                    
                     $object = json_decode($row['value']);
                     PerformanceMeasure::getInstance()->stopMeasurementCheckpoint("db_".$method);
                     
@@ -216,18 +216,18 @@ class EvE_ESI_Caller {
     private function formResult($result) {
         if(is_object($result))
             $array = get_object_vars($result);
-        elseif(is_array($result))
+            elseif(is_array($result))
             $array = $result;
-        else
-            ErrorHandler::getErrorHandler()->addError("Unknown datatype in ESICache");
-            
-        foreach($array as $key => $value) {
-            if(!empty($result->$key)) {
-                if(is_string($result->$key))
-                    $result->$key = htmlspecialchars($result->$key);
-            }
-        }
-        return $result;
+            else
+                ErrorHandler::getErrorHandler()->addError("Unknown datatype in ESICache");
+                
+                foreach($array as $key => $value) {
+                    if(!empty($result->$key)) {
+                        if(is_string($result->$key))
+                            $result->$key = htmlspecialchars($result->$key);
+                    }
+                }
+                return $result;
     }
     
     private function callMethod($methodname, $args = array()) {
@@ -236,19 +236,19 @@ class EvE_ESI_Caller {
                 $object = $this->ApiObjects[$this->methods[$methodname]['class']];
                 if(count($args) == 1)
                     $result = $object->$methodname($args[0]);
-                elseif(count($args) == 2)
+                    elseif(count($args) == 2)
                     $result = $object->$methodname($args[0], $args[1]);
-                elseif(count($args) == 3)
-                 $result = $object->$methodname($args[0], $args[1], $args[2]);
-                elseif(count($args) == 4)
+                    elseif(count($args) == 3)
+                    $result = $object->$methodname($args[0], $args[1], $args[2]);
+                    elseif(count($args) == 4)
                     $result = $object->$methodname($args[0], $args[1], $args[2], $args[3]);
-                elseif(count($args) == 5)
+                    elseif(count($args) == 5)
                     $result = $object->$methodname($args[0], $args[1], $args[2], $args[3], $args[4]);
-                elseif(count($args) < 1)
+                    elseif(count($args) < 1)
                     throw \Exception;
-                else
-                    $result = $object->$methodname($args[0], $args[1], $args[2], $args[3], $args[4], $args[5]);
-                return $result;
+                    else
+                        $result = $object->$methodname($args[0], $args[1], $args[2], $args[3], $args[4], $args[5]);
+                        return $result;
             } else {
                 return false;
             }
@@ -258,7 +258,7 @@ class EvE_ESI_Caller {
     
     /**
      * VARIABLE {VARIABLE}
-     * 
+     *
      * @param string $method
      * @param string $url
      * @param EvEToken $token
@@ -302,7 +302,7 @@ class EvE_ESI_Caller {
         
         $response = json_decode($post_response);
         
-        return $response;        
+        return $response;
     }
     
     
@@ -364,7 +364,39 @@ class EvE_ESI_Caller {
     }
     
     
-    
+    public function RefreshToken(EvEToken $token) : EvEToken
+    {
+        $jsonResult = $this->performCurlRequest(
+            array('refresh_token' => $token->getRefreshToken(),
+                'grant_type' => 'refresh_token'
+                
+            ));
+        
+        $token->setRefreshToken($jsonResult->refresh_token);
+        $token->setAccessToken($jsonResult->access_token);
+        $token->setExpires_in($jsonResult->expires_in);
+        
+        
+        $dbh = Database::getInstance()->getPDOConnection('auth');
+        $sql = "
+            UPDATE auth_evetokens SET AccessToken = :AccessToken, expires_in = :ExpiresIn, RefreshToken = :RefreshToken
+            WHERE user_id = :UserId AND CharacterID = :CharacterID AND TokenType = :TokenType AND ServiceID = :ServiceID";
+        
+        $q=$dbh->prepare($sql);
+        
+        $q->bindValue(':AccessToken', $token->getAccessToken(), PDO::PARAM_STR);
+        $q->bindValue(':RefreshToken', $token->getRefreshToken(), PDO::PARAM_STR);
+        $q->bindValue(':ExpiresIn', $token->getExpires_in(), PDO::PARAM_INT);
+        
+        $q->bindValue(':UserId', $token->getUser_id(), PDO::PARAM_INT);
+        $q->bindValue(':CharacterID', $token->getCharacterID(), PDO::PARAM_INT);
+        $q->bindValue(':TokenType', $token->getTokenType(), PDO::PARAM_STR);
+        $q->bindValue(':ServiceID', $token->getServiceID(), PDO::PARAM_INT);
+        $q->execute();
+        
+        
+        return $token;
+    }
     
     /**
      * VARIABLE {VARIABLE}

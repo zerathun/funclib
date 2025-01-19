@@ -39,6 +39,7 @@ class Database {
         $dsn = 'mysql:dbname='.$dbname.';host='.$this->server;
         $user = $this->uname;
         $password = $this->pw;
+        $this->db = $dbname;
         
         try {
             $this->dbh[$dbname] = NULL;
@@ -99,7 +100,7 @@ class Database {
         if(strlen($dbname) <= 0)
             $dbname = $this->db;
             
-        return $this->dbh[$dbname];
+            return $this->dbh[$dbname];
     }
     
     /**
@@ -110,7 +111,8 @@ class Database {
      */
     public function sql_query($query) {
         $this->last_query = $query;
-        if(empty($this->dbh)) {
+        
+        if(empty($this->dbh[$this->db])) {
             $error_string = "SQL Failure: No Database selected / No Connection made in Program";
             $e = new \Exception($error_string);
             $this->postError($e);
@@ -118,7 +120,7 @@ class Database {
         }
         
         try {
-            $stmt = $this->dbh->prepare($query);
+            $stmt = $this->dbh[$this->db]->prepare($query);
             $stmt->execute();
             $this->last_query_row_count = $stmt->rowCount();
             // Check if there is any error
@@ -128,6 +130,7 @@ class Database {
             }
             
             return $stmt;
+            
         } catch(\Exception $e) {
             $this->postError($e);
         }
@@ -186,7 +189,7 @@ class Database {
         return $this->last_query_row_count;
     }
     
-    public function makeInjectionSafe($input) {
+    public static function makeInjectionSafe($input) {
         $pregString = "";
         
         $rr = Database::getSQLMethods();
@@ -236,12 +239,12 @@ class Database {
     public static function isInjectionSafe($statement) {
         if(is_array($statement))
             throw new \Exception("Injection-Safe Statement expects a given string");
-        $needle = Database::getSQLMethods();
-        $count = 0;
-        foreach ( $needle as $substring ) {
-            $count += substr_count ( $statement, $substring );
-        }
-        return ($count <= 0);
+            $needle = Database::getSQLMethods();
+            $count = 0;
+            foreach ( $needle as $substring ) {
+                $count += substr_count ( $statement, $substring );
+            }
+            return ($count <= 0);
     }
     
     public function __destruct() {

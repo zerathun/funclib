@@ -1,8 +1,9 @@
 <?php
 namespace Funclib\EvE;
 
-use Funclib\Iface\Saveable;
+use Funclib\Ifaces\Saveable;
 use Funclib\LinkMng;
+use Funclib\Database;
 
 class EvEMarketItem extends Saveable
 {
@@ -25,6 +26,8 @@ class EvEMarketItem extends Saveable
     private $buy_price_avg = 0;
     private $total_buy_volume = 0;
     
+    private $lowest_sell_price;
+    private $highest_buy_price;
     
     private $loaded_from_db = false;
     private array $decoded_img_url = array();
@@ -75,6 +78,8 @@ class EvEMarketItem extends Saveable
             'buy_total_volume' => $this->getTotalBuyVolume(),
             'buy_price_avg' => number_format($this->getBuyPrice(), 2, ".", "´"),
             'delta' => $this->getSellDelta()."|".$this->getBuyDelta(),
+            'lowest_sell_price' => number_format($this->getLowestSellPrice(), 2, ".", "´"),
+            'highest_buy_price' => number_format($this->getHighestBuyPrice(), 2, ".", "´"),
         );
     }
     
@@ -97,7 +102,29 @@ class EvEMarketItem extends Saveable
         'total_volume' => 'setTotalVolume',
         'buy_price_avg' => 'setBuyPrice',
         'total_buy_volume' => 'setTotalBuyVolume',
+        'lowest_sell_price' => 'setLowestSellPrice',
+        'highest_buy_price' => 'setHighestBuyPrice',
     );
+    
+    public function setLowestSellPrice(float $price)
+    {
+        $this->lowest_sell_price = $price;
+    }
+    
+    public function getLowestSellPrice():float
+    {
+        return (float)$this->lowest_sell_price;
+    }
+    
+    public function getHighestBuyPrice():float
+    {
+        return (float)$this->highest_buy_price;
+    }
+    
+    public function setHighestBuyPrice(float $price)
+    {
+        $this->highest_buy_price = $price;
+    }
     
     public function setPrice(float $price)
     {
@@ -361,6 +388,7 @@ class EvEMarketItem extends Saveable
         }
         
         $this->setToSave($savearr);
+        Database::getInstance()->setDatabase('ember-industry');
         parent::save($check_safe_sql);
     }
     

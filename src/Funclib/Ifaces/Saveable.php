@@ -1,7 +1,7 @@
 <?php 
 namespace Funclib\Ifaces;
 
-use Database\Database;
+use Funclib\Database;
 use \Exception as Exception;
 
 

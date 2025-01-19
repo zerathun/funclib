@@ -4,7 +4,7 @@ use Funclib\Ifaces\Saveable;
 
 class EvECharacter extends  Saveable
 {
-
+    
     protected $CharacterID = 0;
     protected $AllianceID = 0;
     protected $name = "";
@@ -26,8 +26,8 @@ class EvECharacter extends  Saveable
     
     protected function getAssignedAttributes()
     {}
-
-
+    
+    
     protected function getMethods()
     {}
     
@@ -67,7 +67,7 @@ class EvECharacter extends  Saveable
     }
     
     
-
+    
 }
 
 

@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Funclib\EvE;
 
 class EvEToken
@@ -21,7 +21,7 @@ class EvEToken
     private $img_url;
     private $corp_id;
     private $data;
-
+    
     
     public function __construct()
     {
@@ -30,7 +30,7 @@ class EvEToken
     
     public function IsExpired() : bool
     {
-        return (!empty($this->timestamp) && !empty($this->expires_in) && ($this->timestamp + $this->expires_in < time()));        
+        return (!empty($this->timestamp) && !empty($this->expires_in) && ($this->timestamp + $this->expires_in < time()));
     }
     
     public function IsNotExpired() : bool
@@ -190,6 +190,8 @@ class EvEToken
     {
         return ($this->getTokenType() == "Corporation");
     }
+    
+    
     
 }
 
